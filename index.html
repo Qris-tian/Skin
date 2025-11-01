@@ -19,19 +19,9 @@
       font-size: 15px;
       transition: 0.3s;
     }
-    button {
-      background-color: #3a3af5;
-      color: white;
-      cursor: pointer;
-    }
     button:hover {
-      background-color: #5a5aff;
-      transform: scale(1.05);
-    }
-    button:disabled {
-      background-color: #444;
-      cursor: not-allowed;
-      transform: none;
+      background: #3b3b58;
+      cursor: pointer;
     }
     canvas {
       background: #333;
@@ -39,27 +29,25 @@
       image-rendering: pixelated;
       border-radius: 10px;
     }
-    /* Progress bar */
     #progressContainer {
       width: 80%;
-      height: 16px;
-      background: #444;
+      background: #2a2a3d;
       border-radius: 10px;
-      margin: 15px auto;
-      display: none;
+      margin: 10px auto;
+      height: 14px;
       overflow: hidden;
+      display: none;
     }
     #progressBar {
-      width: 0%;
       height: 100%;
-      background: linear-gradient(90deg, #4caf50, #76ff03);
-      border-radius: 10px;
-      transition: width 0.2s ease;
+      width: 0%;
+      background: #00bfff;
+      transition: width 0.2s;
     }
-    #status {
-      margin-top: 10px;
+    #statusText {
+      margin-top: 8px;
       font-size: 14px;
-      color: #bbb;
+      color: #ccc;
     }
   </style>
 </head>
@@ -78,11 +66,10 @@
   <button id="processBtn">Pasang Baju</button>
   <button id="downloadBtn" disabled>Download Skin Jadi</button>
 
-  <!-- Progress bar -->
   <div id="progressContainer">
     <div id="progressBar"></div>
   </div>
-  <div id="status"></div>
+  <div id="statusText"></div>
 
   <canvas id="canvas" width="64" height="64"></canvas>
 
@@ -95,93 +82,82 @@
     const modelSelect = document.getElementById("model");
     const progressContainer = document.getElementById("progressContainer");
     const progressBar = document.getElementById("progressBar");
-    const statusText = document.getElementById("status");
+    const statusText = document.getElementById("statusText");
 
     const outfitImg = new Image();
-    outfitImg.src = "template.png"; // file permanen di folder sama
+    outfitImg.src = "./template.png"; // file permanen
 
     outfitImg.onerror = () => {
-      statusText.textContent = "⚠️ Gagal memuat template.png. Pastikan file-nya ada di folder yang sama.";
-      processBtn.disabled = false;
+      statusText.textContent = "❌ Gagal memuat template.png. Pastikan file ada di folder yang sama.";
     };
 
     function readFile(input, callback) {
       if (input.files && input.files[0]) {
         const reader = new FileReader();
+        reader.onloadstart = () => updateProgress(10, "Membaca file skin...");
+        reader.onprogress = e => {
+          if (e.lengthComputable) {
+            const percent = Math.min(10 + (e.loaded / e.total) * 20, 30);
+            updateProgress(percent, "Membaca skin...");
+          }
+        };
         reader.onload = e => callback(e.target.result);
         reader.readAsDataURL(input.files[0]);
-      } else {
-        statusText.textContent = "⚠️ Silakan pilih file skin terlebih dahulu!";
-        processBtn.disabled = false;
       }
     }
 
-    function showProgress(callback) {
+    function updateProgress(percent, text) {
       progressContainer.style.display = "block";
-      progressBar.style.width = "0%";
-      statusText.textContent = "⏳ Memproses...";
-      let progress = 0;
-
-      const interval = setInterval(() => {
-        progress += Math.random() * 20;
-        if (progress >= 100) {
-          progress = 100;
-          clearInterval(interval);
-          setTimeout(() => {
-            progressContainer.style.display = "none";
-            statusText.textContent = "";
-            callback();
-          }, 300);
-        }
-        progressBar.style.width = progress + "%";
-      }, 200);
-
-      // keamanan: auto stop setelah 5 detik
-      setTimeout(() => {
-        if (progress < 100) {
-          clearInterval(interval);
-          progressBar.style.width = "100%";
-          progressContainer.style.display = "none";
-          statusText.textContent = "";
-          callback();
-        }
-      }, 5000);
+      progressBar.style.width = percent + "%";
+      statusText.textContent = text;
     }
 
     processBtn.onclick = () => {
-      processBtn.disabled = true;
+      if (!skinInput.files[0]) {
+        alert("Silakan upload file skin dulu!");
+        return;
+      }
+
       downloadBtn.disabled = true;
-      showProgress(() => {
-        readFile(skinInput, (skinSrc) => {
-          const skinImg = new Image();
-          skinImg.onload = () => {
-            outfitImg.onload = () => {
-              ctx.clearRect(0, 0, canvas.width, canvas.height);
-              ctx.drawImage(skinImg, 0, 0);
+      updateProgress(0, "Menyiapkan...");
 
-              const model = modelSelect.value;
+      const model = modelSelect.value;
+      readFile(skinInput, (skinSrc) => {
+        const skinImg = new Image();
 
-              // Hapus layer ke-2 (outer layer)
-              if (model === "steve") {
-                ctx.clearRect(16, 32, 24, 16);
-                ctx.clearRect(40, 32, 16, 16);
-                ctx.clearRect(48, 48, 16, 16);
-              } else {
-                ctx.clearRect(16, 32, 24, 16);
-                ctx.clearRect(36, 32, 12, 16);
-                ctx.clearRect(44, 48, 12, 16);
-              }
+        skinImg.onload = () => {
+          updateProgress(60, "Memuat skin...");
+          outfitImg.onload = () => {
+            updateProgress(80, "Menggabungkan...");
 
-              // Tambahkan baju permanen
-              ctx.drawImage(outfitImg, 0, 0);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(skinImg, 0, 0);
 
-              statusText.textContent = "✅ Selesai! Klik Download untuk menyimpan.";
-              processBtn.disabled = false;
-              downloadBtn.disabled = false;
-            };
+            // Hapus layer ke-2 (outer layer)
+            if (model === "steve") {
+              ctx.clearRect(16, 32, 24, 16);
+              ctx.clearRect(40, 32, 16, 16);
+              ctx.clearRect(48, 48, 16, 16);
+            } else {
+              ctx.clearRect(16, 32, 24, 16);
+              ctx.clearRect(36, 32, 12, 16);
+              ctx.clearRect(44, 48, 12, 16);
+            }
+
+            // Tambahkan baju
+            ctx.drawImage(outfitImg, 0, 0);
+            updateProgress(100, "✅ Selesai! Klik Download Skin Jadi.");
+            downloadBtn.disabled = false;
           };
-          skinImg.src = skinSrc;
-        });
+          outfitImg.src = "./template.png";
+        };
+
+        skinImg.onerror = () => {
+          updateProgress(0, "❌ File skin tidak valid.");
+        };
+
+        updateProgress(40, "Memuat gambar skin...");
+        skinImg.src = skinSrc;
       });
     };
 
