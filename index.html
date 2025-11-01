@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- ✅ agar tampilan normal di HP -->
   <title>Skin + Baju Minecraft (Offline)</title>
   <style>
     body {
@@ -10,25 +11,84 @@
       color: white;
       text-align: center;
       padding: 20px;
+      margin: 0;
     }
+
+    h2 {
+      font-size: 1.4rem;
+      margin-bottom: 15px;
+    }
+
     input, select, button {
       margin: 10px;
-      padding: 8px 14px;
+      padding: 10px 16px;
       border: none;
       border-radius: 8px;
+      font-size: 16px;
+      transition: 0.3s;
+      max-width: 90%;
+    }
+
+    #downloadBtn {
+  background: #2ecc71;       /* hijau cerah */
+  color: white;
+}
+
+    #downloadBtn:disabled {
+  background: #555;          /* abu-abu saat belum aktif */
+  color: #aaa;
+}
+
+    #downloadBtn:hover:not(:disabled) {
+      background: #27ae60;       /* hijau lebih gelap saat hover */
+    }
+    
+    /* 🌿 Tombol Pasang Baju */
+    #processBtn {
+      background-color: #f39c12; /* hijau terang */
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
       font-size: 15px;
       transition: 0.3s;
     }
+    #processBtn:hover {
+      background-color: #e67e22;
+      transform: scale(1.05);
+      cursor: pointer;
+    }
+
+    /* 🎨 Dropdown model */
+    select {
+      background-color: #3498db;
+      color: white;
+      font-weight: bold;
+      border-radius: 8px;
+      padding: 8px 14px;
+      border: none;
+      transition: 0.3s;
+    }
+    select:hover {
+      background-color: #2e86c1;
+    }
+
     button:hover {
       background: #3b3b58;
       cursor: pointer;
     }
+
     canvas {
       background: #333;
       margin-top: 15px;
       image-rendering: pixelated;
       border-radius: 10px;
+      width: 100%;
+      max-width: 320px; /* ✅ biar pas di layar HP */
+      height: auto;
     }
+
     #progressContainer {
       width: 80%;
       background: #2a2a3d;
@@ -38,21 +98,38 @@
       overflow: hidden;
       display: none;
     }
+
     #progressBar {
       height: 100%;
       width: 0%;
-      background: #00bfff;
+      background: #lightgreen;
       transition: width 0.2s;
     }
+
     #statusText {
       margin-top: 8px;
       font-size: 14px;
       color: #ccc;
     }
+
+    /* ✅ Tambahan: atur agar elemen rata tengah di layar kecil */
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      input, select, button {
+        display: block;
+        margin: 10px auto;
+        width: 90%;
+      }
+      h2 {
+        font-size: 1.2rem;
+      }
+    }
   </style>
 </head>
 <body>
-  <h2>🧥 Tambah Baju ke Skin Minecraft</h2>
+  <h2>Pasang Template Baju VictornZ</h2>
 
   <label>Pilih model:</label>
   <select id="model">
@@ -60,11 +137,11 @@
     <option value="alex">Alex (Slim)</option>
   </select><br>
 
-  <label>Upload Skin Anda:</label>
+  <label>Upload Skin :</label>
   <input type="file" id="skinInput" accept="image/png"><br>
 
   <button id="processBtn">Pasang Baju</button>
-  <button id="downloadBtn" disabled>Download Skin Jadi</button>
+  <button id="downloadBtn" disabled>Download Skin </button>
 
   <div id="progressContainer">
     <div id="progressBar"></div>
@@ -163,7 +240,7 @@
 
     downloadBtn.onclick = () => {
       const link = document.createElement("a");
-      link.download = "skin_jadi.png";
+      link.download = "hasil.png";
       link.href = canvas.toDataURL("image/png");
       link.click();
     };
